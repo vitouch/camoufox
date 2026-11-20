@@ -647,6 +647,10 @@ const browser = await Camoufox({ humanize: {
 
 # Building the browser
 
+For a Linux amd64 build, open **Actions → Build Linux amd64 → Run workflow**.
+Select the branch to compile. Download **camoufox-linux-amd64** from the
+completed run’s **Artifacts** section and extract the browser ZIP inside.
+
 This repository is not the Firefox source. It fetches Firefox, copies in
 [`browser/additions/`](browser/additions), applies
 [`browser/patches/`](browser/patches) and builds. The build runs on Linux; the

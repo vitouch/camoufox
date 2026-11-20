@@ -126,7 +126,7 @@ def test_packaging_bundles_it_where_the_launchers_look():
 
 def test_a_release_bundles_the_ubo_its_tests_ran_with():
     """One resolve per cut, handed to the tests, every build and the manifest."""
-    workflows = REPO_ROOT / ".github" / "workflows"
+    workflows = REPO_ROOT / "ci" / "upstream-workflows"
     jobs = yaml.safe_load((workflows / "release.yml").read_text(encoding="utf-8"))["jobs"]
     pin = "${{ needs.ubo.outputs.pin }}"
     assert any("fetch-ubo.py resolve" in s.get("run", "") for s in jobs["ubo"]["steps"])

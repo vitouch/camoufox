@@ -1048,7 +1048,7 @@ def test_a_disabled_gate_makes_no_request():
 # the workflow's plumbing -- result files have to survive the round trip
 # ---------------------------------------------------------------------------
 
-WORKFLOW = CI_ROOT.parent / ".github" / "workflows" / "tests.yml"
+WORKFLOW = CI_ROOT / "upstream-workflows" / "tests.yml"
 
 
 def _upload_blocks():
@@ -1292,7 +1292,7 @@ def test_the_workflow_prepares_through_the_retrying_entry_point():
     """A step that shells straight to `make mozbootstrap` gets no retry."""
     from ci._util import REPO_ROOT
 
-    workflow = (REPO_ROOT / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
+    workflow = (REPO_ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8")
     assert "python3 -m ci.run_prepare" in workflow
     prepare = workflow.split("Prepare the source tree", 1)[1].split("- name:", 1)[0]
     # Comments in that step quote the make targets while explaining them, so

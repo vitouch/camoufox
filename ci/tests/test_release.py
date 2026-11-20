@@ -281,7 +281,7 @@ def test_no_job_a_channel_needs_is_skipped_by_a_job_it_skips(channel):
     is false when any job upstream of it -- not only its direct needs -- was
     skipped. The first prerelease published to PyPI and skipped npm that way:
     promote-browser, skipped on every push, sits upstream of publish-npm."""
-    jobs = yaml.safe_load((release.REPO_ROOT / ".github/workflows/release.yml")
+    jobs = yaml.safe_load((release.REPO_ROOT / "ci/upstream-workflows/release.yml")
                           .read_text(encoding="utf-8"))["jobs"]
 
     def needs(name):
@@ -310,7 +310,7 @@ def test_no_job_a_channel_needs_is_skipped_by_a_job_it_skips(channel):
 def test_npm_publish_is_given_a_local_path():
     """npm reads `dir/file.tgz` as a GitHub owner/repo and tries to clone it; the
     first npm publish failed that way. A local tarball needs `./` or `/`."""
-    jobs = yaml.safe_load((release.REPO_ROOT / ".github/workflows/release.yml")
+    jobs = yaml.safe_load((release.REPO_ROOT / "ci/upstream-workflows/release.yml")
                           .read_text(encoding="utf-8"))["jobs"]
     runs = [step["run"] for job in jobs.values() for step in job.get("steps", [])
             if "npm publish" in step.get("run", "")]
@@ -374,7 +374,7 @@ def test_a_package_that_differs_only_in_its_version_is_not_new(tmp_path, build):
 
 
 def test_each_registry_is_published_only_when_its_own_package_changed():
-    jobs = yaml.safe_load((release.REPO_ROOT / ".github/workflows/release.yml")
+    jobs = yaml.safe_load((release.REPO_ROOT / "ci/upstream-workflows/release.yml")
                           .read_text(encoding="utf-8"))["jobs"]
     assert "outputs.publish_pypi == 'true'" in jobs["publish-pypi"]["if"]
     assert "outputs.publish_npm == 'true'" in jobs["publish-npm"]["if"]

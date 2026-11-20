@@ -1,4 +1,9 @@
-# The test pipeline
+# Upstream CI reference
+
+This fork runs a single manual [Linux amd64 build](../.github/workflows/build.yml).
+The pipeline and release train described below are the archived upstream
+configuration in [upstream-workflows](upstream-workflows/). The individual
+test runners remain available locally.
 
 Everything that runs a suite against Camoufox. The same definition runs on a
 pull request, on a push to `main`, before every release (through
@@ -232,7 +237,7 @@ Pushing to a branch cancels its running build (`cancel-in-progress`).
 
 ## Releases
 
-One workflow, [`release.yml`](../.github/workflows/release.yml), makes every
+One workflow, [`release.yml`](upstream-workflows/release.yml), makes every
 release, on a **train**: on the 1st and 15th of each month the newest
 **prerelease** is promoted to **stable**, and a new prerelease is cut from
 `main`. Merges are tested by `tests.yml` but not released, so users see two
