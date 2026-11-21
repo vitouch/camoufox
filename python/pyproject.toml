@@ -67,6 +67,12 @@ pro = ["maxminddb", "pynacl", "zstandard", "pyfastcdc"]
 [tool.poetry.scripts]
 camoufox = "camoufox.__main__:cli"
 
+[tool.uv]
+# A project depending on this directory through uv rebuilds it only when one of
+# these changes; uv's default watches pyproject.toml alone, so an edited source
+# would keep running from the previous build.
+cache-keys = [{ file = "pyproject.toml" }, { file = "README.md" }, { file = "src/**/*" }]
+
 [tool.pytest.ini_options]
 # Test the in-tree package, whatever camoufox is installed.
 pythonpath = ["src"]
