@@ -2,11 +2,21 @@ name: Build Linux amd64
 
 on: workflow_dispatch
 
+# A second dispatch waits for the first, then fails fast in `plan` if the first
+# already released the same version.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      tag: ${{ steps.plan.outputs.tag }}
+      asset: ${{ steps.plan.outputs.asset }}
+      digest: ${{ steps.plan.outputs.digest }}
     env:
       BUILD_TARGET: linux,x86_64
       CARGO_BUILD_JOBS: "1"
@@ -14,6 +24,32 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - id: plan
+        name: Name the release after the version being built
+        # upstream.sh names both the package and the tag (upstream's
+        # v<version>-<release> format). A version is released once, so an
+        # existing tag fails here rather than after the multi-hour build.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(sed -n 's/^version=//p' browser/upstream.sh)"
+          release="$(sed -n 's/^release=//p' browser/upstream.sh)"
+          tag="v${version}-${release}"
+          if [[ ! "$tag" =~ ^v[0-9][0-9.]*-[a-z]+\.[0-9]+$ ]]; then
+            echo "::error file=browser/upstream.sh::Cannot form a release tag from version='${version}' release='${release}'"
+            exit 1
+          fi
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --silent 2>/dev/null; then
+            echo "::error file=browser/upstream.sh::Tag ${tag} already exists; bump release= in browser/upstream.sh to build a new version"
+            exit 1
+          fi
+          {
+            echo "tag=${tag}"
+            echo "asset=camoufox-${version}-${release}-lin.x86_64.zip"
+            echo "digest=$(python3 -m ci.browser_inputs --source-digest)"
+          } >> "$GITHUB_OUTPUT"
+          echo "Building ${tag}"
 
       - name: Free disk space and add swap for the LTO link
         run: |
@@ -41,9 +77,42 @@ jobs:
           make fonts-extract
           python3 multibuild.py --target linux --arch x86_64
 
+      # The exact package `plan` named, not a glob: a build that packaged some
+      # other version fails here instead of being released under the wrong tag.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: camoufox-linux-amd64
-          path: browser/dist/camoufox-*-lin.x86_64.zip
+          path: browser/dist/${{ steps.plan.outputs.asset }}
           compression-level: 0
           if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # the release and its tag
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: camoufox-linux-amd64
+          path: artifacts
+
+      - name: Publish the release
+        # manifest.json declares the browser interface the Python client checks
+        # before installing (camoufox.pkgman.release_interface). `--target` tags
+        # the commit that was built.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+          ASSET: ${{ needs.build.outputs.asset }}
+          DIGEST: ${{ needs.build.outputs.digest }}
+        run: |
+          python3 -m ci.release manifest --tag "$TAG" --digest "$DIGEST" --commit "$GITHUB_SHA" > manifest.json
+          cat manifest.json
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$TAG" --generate-notes \
+            "artifacts/${ASSET}" manifest.json
