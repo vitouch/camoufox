@@ -370,6 +370,7 @@ passed to Playwright's `firefox.launch()` (or `launch_persistent_context()`).
 | Official | `daijro/camoufox` |
 | CoryKing | `coryking/camoufox` |
 | JWriter20 | `JWriter20/camoufox` |
+| vitouch | `vitouch/camoufox` |
 
 https://github.com/user-attachments/assets/992b1830-6b21-4024-9165-728854df1473
 

@@ -38,6 +38,15 @@ browsers:
           max: "1"
         # Assume all browsers
 
+  - repo: vitouch/camoufox
+    name: vitouch
+    pattern: "{name}-{version}-{build}-{os}.{arch}.zip"
+    versions:
+      - python_library:
+          min: "0.5.0"
+          max: "1"
+        # Assume all browsers
+
 # GeoIP database repositories
 #
 # Every URL points at the source's newest build, never a pinned one: the
